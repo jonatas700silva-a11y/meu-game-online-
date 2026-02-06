@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Jônatas & Érica</title>
 
 <style>
@@ -13,191 +13,199 @@
   padding:0;
   box-sizing:border-box;
   touch-action:none;
-  -webkit-user-select:none;
   user-select:none;
 }
 
 body{
   background:black;
-  overflow:hidden;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  height:100vh;
   font-family:'Press Start 2P';
+}
+
+#container{
+  width:360px;
+  height:640px;
+  background:black;
+  border:4px solid #22c55e;
+  position:relative;
 }
 
 canvas{
-  display:none;
+  width:100%;
+  height:100%;
   background:#020617;
 }
 
-#start{
-  position:fixed;
-  inset:0;
-  display:flex;
-  flex-direction:column;
-  justify-content:center;
-  align-items:center;
-  color:#22c55e;
-  background:black;
-}
-
-#title{
-  font-size:28px;
-  margin-bottom:15px;
-  animation:pulse 1s infinite alternate;
-}
-
-@keyframes pulse{
-  from{opacity:.6}
-  to{opacity:1}
-}
-
-#btn{
-  padding:15px 30px;
-  background:#22c55e;
-  border:none;
-  font-family:'Press Start 2P';
-}
-
 #hud{
-  position:fixed;
-  top:10px;
-  left:10px;
+  position:absolute;
+  top:8px;
+  left:8px;
   color:white;
-  font-size:12px;
-  z-index:5;
+  font-size:10px;
 }
 
 #controls{
-  position:fixed;
+  position:absolute;
   bottom:15px;
-  left:50%;
-  transform:translateX(-50%);
+  width:100%;
   display:flex;
-  gap:10px;
-  z-index:10;
+  justify-content:space-between;
+  padding:0 10px;
+}
+
+#move{
+  display:grid;
+  grid-template-columns:50px 50px 50px;
+  grid-template-rows:50px 50px 50px;
+  gap:5px;
+}
+
+#actions{
+  display:flex;
+  flex-direction:column;
+  gap:12px;
 }
 
 .btn{
-  width:55px;
-  height:55px;
+  width:50px;
+  height:50px;
   border-radius:50%;
   background:rgba(255,255,255,.15);
-  display:flex;
-  justify-content:center;
-  align-items:center;
   color:white;
-  font-size:20px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:18px;
+}
+
+#start{
+  position:absolute;
+  inset:0;
+  background:black;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  color:#22c55e;
+}
+
+#start button{
+  margin-top:20px;
+  padding:10px 20px;
+  background:#22c55e;
+  border:none;
+  font-family:'Press Start 2P';
 }
 </style>
 </head>
 
 <body>
 
+<div id="container">
+
 <div id="start">
-  <div id="title">JÔNATAS & ÉRICA</div>
-  <button id="btn" onclick="startGame()">▶ START</button>
+  <div style="font-size:18px">JÔNATAS & ÉRICA</div>
+  <button onclick="startGame()">▶ START</button>
 </div>
 
 <div id="hud">
-❤️ Vida: <span id="life">100</span><br>
-🏆 Fase: <span id="level">1</span><br>
-⭐ Score: <span id="score">0</span>
+❤️ <span id="life">100</span><br>
+🏆 <span id="level">1</span><br>
+⭐ <span id="score">0</span>
 </div>
 
-<canvas id="game"></canvas>
+<canvas id="game" width="1080" height="1920"></canvas>
 
 <div id="controls">
-  <div class="btn" ontouchstart="move.left=true" ontouchend="move.left=false">⬅️</div>
-  <div class="btn" ontouchstart="move.up=true" ontouchend="move.up=false">⬆️</div>
-  <div class="btn" ontouchstart="move.down=true" ontouchend="move.down=false">⬇️</div>
-  <div class="btn" ontouchstart="move.right=true" ontouchend="move.right=false">➡️</div>
-  <div class="btn" ontouchstart="shoot()">⚡</div>
+
+  <div id="move">
+    <div></div>
+    <div class="btn" ontouchstart="move.up=true" ontouchend="move.up=false">⬆️</div>
+    <div></div>
+
+    <div class="btn" ontouchstart="move.left=true" ontouchend="move.left=false">⬅️</div>
+    <div></div>
+    <div class="btn" ontouchstart="move.right=true" ontouchend="move.right=false">➡️</div>
+
+    <div></div>
+    <div class="btn" ontouchstart="move.down=true" ontouchend="move.down=false">⬇️</div>
+    <div></div>
+  </div>
+
+  <div id="actions">
+    <div class="btn" onclick="rotate()">🔄</div>
+    <div class="btn" onclick="shoot()">⚡</div>
+  </div>
+
 </div>
 
-<audio id="intro" loop src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3"></audio>
-<audio id="shot" src="https://www.soundjay.com/button/sounds/button-16.mp3"></audio>
-<audio id="over" src="https://www.soundjay.com/misc/sounds/fail-buzzer-01.mp3"></audio>
+</div>
+
+<!-- Sons -->
+<audio id="loseVoice">
+  <source src="https://translate.google.com/translate_tts?ie=UTF-8&tl=pt-BR&client=tw-ob&q=Tente+novamente">
+</audio>
 
 <script>
-const canvas=document.getElementById('game');
-const ctx=canvas.getContext('2d');
-
-function resize(){
-  canvas.width=innerWidth;
-  canvas.height=innerHeight;
-}
-resize();
-onresize=resize;
+const canvas=document.getElementById("game");
+const ctx=canvas.getContext("2d");
 
 let move={up:false,down:false,left:false,right:false};
-let life=100,level=1,score=0;
+let life=100,level=1,score=0,dir=1;
 
-const player={x:200,y:200,size:26,speed:3};
+const player={x:540,y:960,size:40,speed:8};
 let enemies=[],shots=[],princess={};
 
 function startGame(){
   document.getElementById("start").style.display="none";
-  canvas.style.display="block";
-  document.getElementById("intro").play();
   newLevel();
   loop();
+}
+
+function rotate(){ dir*=-1; }
+
+function shoot(){
+  shots.push({
+    x:player.x,
+    y:player.y,
+    dx:14*dir,
+    dy:0,
+    size:8
+  });
 }
 
 function newLevel(){
   enemies=[];
   for(let i=0;i<level*4;i++){
     enemies.push({
-      x:Math.random()*canvas.width,
-      y:Math.random()*canvas.height,
-      size:24,
-      speed:1+level*0.3,
+      x:Math.random()*1080,
+      y:Math.random()*1920,
+      size:36,
+      speed:2+level*0.2,
       life:30,
       points:10
     });
   }
-  princess={
-    x:Math.random()*canvas.width,
-    y:Math.random()*canvas.height,
-    size:14
-  };
+  princess={x:Math.random()*1080,y:Math.random()*1920,size:20};
   document.getElementById("level").innerText=level;
 }
-
-function shoot(){
-  document.getElementById("shot").play();
-  shots.push({
-    x:player.x+player.size/2,
-    y:player.y+player.size/2,
-    dx:6,
-    dy:0,
-    size:4
-  });
-}
-
-document.onkeydown=e=>{
-  if(e.key==="ArrowUp"||e.key==="w")move.up=true;
-  if(e.key==="ArrowDown"||e.key==="s")move.down=true;
-  if(e.key==="ArrowLeft"||e.key==="a")move.left=true;
-  if(e.key==="ArrowRight"||e.key==="d")move.right=true;
-  if(e.code==="Space")shoot();
-};
-
-document.onkeyup=e=>{
-  if(e.key==="ArrowUp"||e.key==="w")move.up=false;
-  if(e.key==="ArrowDown"||e.key==="s")move.down=false;
-  if(e.key==="ArrowLeft"||e.key==="a")move.left=false;
-  if(e.key==="ArrowRight"||e.key==="d")move.right=false;
-};
 
 function update(){
   if(move.up)player.y-=player.speed;
   if(move.down)player.y+=player.speed;
   if(move.left)player.x-=player.speed;
   if(move.right)player.x+=player.speed;
+
+  player.x=Math.max(0,Math.min(1080-player.size,player.x));
+  player.y=Math.max(0,Math.min(1920-player.size,player.y));
 }
 
 function draw(){
   ctx.fillStyle="#020617";
-  ctx.fillRect(0,0,canvas.width,canvas.height);
+  ctx.fillRect(0,0,1080,1920);
 
   ctx.fillStyle="#22c55e";
   ctx.fillRect(player.x,player.y,player.size,player.size);
@@ -235,7 +243,7 @@ function updateShots(){
   shots.forEach((s,i)=>{
     s.x+=s.dx;
     enemies.forEach((e,j)=>{
-      if(dist(s,e)<18){
+      if(dist(s,e)<30){
         enemies.splice(j,1);
         shots.splice(i,1);
         score+=e.points;
@@ -246,7 +254,7 @@ function updateShots(){
 }
 
 function rescue(){
-  if(dist(player,princess)<35){
+  if(dist(player,princess)<50){
     alert("💖 Você salvou Érica!");
     level++;
     newLevel();
@@ -254,7 +262,7 @@ function rescue(){
 }
 
 function hit(a,b){
-  return a.x<b.x+b.size && a.x+a.size>b.x && a.y<b.y+b.size && a.y+a.size>b.y;
+  return a.x<b.x+b.size&&a.x+a.size>b.x&&a.y<b.y+b.size&&a.y+a.size>b.y;
 }
 
 function dist(a,b){
@@ -269,9 +277,8 @@ function loop(){
   rescue();
 
   if(life<=0){
-    document.getElementById("over").play();
-    alert("GAME OVER");
-    location.reload();
+    document.getElementById("loseVoice").play();
+    setTimeout(()=>location.reload(),2000);
   }
 
   requestAnimationFrame(loop);
