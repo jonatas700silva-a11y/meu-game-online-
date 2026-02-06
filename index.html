@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Jônatas & Érica</title>
+
+<style>
+body{margin:0;background:#020617;color:white;font-family:Arial;overflow:hidden}
+canvas{display:block}
+#hud{position:fixed;top:10px;left:10px;background:rgba(0,0,0,.6);padding:10px;border-radius:10px;z-index:5}
+#controls{position:fixed;bottom:10px;left:50%;transform:translateX(-50%);display:flex;gap:10px;z-index:10}
+.btn{width:55px;height:55px;border-radius:50%;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-size:22px}
+</style>
+</head>
+
+<body>
+
+<div id="hud">
+❤️ Vida: <span id="life">100</span><br>
+🏆 Fase: <span id="level">1</span>
+</div>
+
+<canvas id="game"></canvas>
+
+<div id="controls">
+  <div class="btn" ontouchstart="keys.a=true" ontouchend="keys.a=false">⬅️</div>
+  <div class="btn" ontouchstart="keys.w=true" ontouchend="keys.w=false">⬆️</div>
+  <div class="btn" ontouchstart="keys.s=true" ontouchend="keys.s=false">⬇️</div>
+  <div class="btn" ontouchstart="keys.d=true" ontouchend="keys.d=false">➡️</div>
+  <div class="btn" ontouchstart="attack()">⚔️</div>
+</div>
+
+<script>
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+function resize(){canvas.width=innerWidth;canvas.height=innerHeight}
+resize(); window.onresize=resize;
+
+let keys={},life=100,level=1;
+
+const player={x:200,y:200,size:28,speed:4};
+let enemies=[],princess={};
+
+function newLevel(){
+  enemies=[];
+  for(let i=0;i<level*4;i++){
+    enemies.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,size:26,life:30,speed:1+level*0.2});
+  }
+  princess={x:Math.random()*canvas.width,y:Math.random()*canvas.height,size:30,rescued:false};
+  document.getElementById("level").innerText=level;
+}
+
+newLevel();
+
+document.onkeydown=e=>keys[e.key.toLowerCase()]=true;
+document.onkeyup=e=>keys[e.key.toLowerCase()]=false;
+
+function move(){
+  if(keys.w)player.y-=player.speed;
+  if(keys.s)player.y+=player.speed;
+  if(keys.a)player.x-=player.speed;
+  if(keys.d)player.x+=player.speed;
+}
+
+function drawMap(){
+  ctx.fillStyle="#020617";
+  ctx.fillRect(0,0,canvas.width,canvas.height);
+  ctx.strokeStyle="#1e293b";
+  for(let x=0;x<canvas.width;x+=80)
+  for(let y=0;y<canvas.height;y+=80)
+  ctx.strokeRect(x,y,80,80);
+}
+
+function drawPlayer(){
+  ctx.fillStyle="#38bdf8";
+  ctx.fillRect(player.x,player.y,player.size,player.size);
+  ctx.fillStyle="silver";
+  ctx.fillRect(player.x+6,player.y+6,16,16);
+}
+
+function drawEnemies(){
+  enemies.forEach(e=>{
+    ctx.fillStyle="crimson";
+    ctx.fillRect(e.x,e.y,e.size,e.size);
+  });
+}
+
+function drawPrincess(){
+  ctx.fillStyle="pink";
+  ctx.beginPath();
+  ctx.arc(princess.x,princess.y,princess.size,0,Math.PI*2);
+  ctx.fill();
+}
+
+function enemyAI(){
+  enemies.forEach(e=>{
+    if(e.x<player.x)e.x+=e.speed;
+    if(e.x>player.x)e.x-=e.speed;
+    if(e.y<player.y)e.y+=e.speed;
+    if(e.y>player.y)e.y-=e.speed;
+    if(collision(player,e)){life-=0.3;document.getElementById("life").innerText=Math.floor(life);}
+  });
+}
+
+function attack(){
+  enemies.forEach((e,i)=>{
+    if(dist(player,e)<45){e.life-=15;if(e.life<=0)enemies.splice(i,1);}
+  });
+}
+
+function rescue(){
+  if(dist(player,princess)<40){
+    alert("💖 Você salvou Érica!");
+    level++;
+    newLevel();
+  }
+}
+
+function collision(a,b){
+  return a.x<b.x+b.size&&a.x+a.size>b.x&&a.y<b.y+b.size&&a.y+a.size>b.y;
+}
+function dist(a,b){return Math.hypot(a.x-b.x,a.y-b.y);}
+
+function loop(){
+  drawMap();
+  move();
+  drawPlayer();
+  drawEnemies();
+  drawPrincess();
+  enemyAI();
+  rescue();
+
+  if(life<=0){alert("Game Over!");location.reload();}
+
+  requestAnimationFrame(loop);
+}
+loop();
+</script>
+
+</body>
+</html>
+
