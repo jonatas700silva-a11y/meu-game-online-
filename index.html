@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Jônatas & Érica</title>
+<title>Jônatas & Érica - 16 BIT</title>
 
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
@@ -17,7 +17,7 @@
 }
 
 body{
-  background:black;
+  background:#000;
   display:flex;
   justify-content:center;
   align-items:center;
@@ -28,55 +28,69 @@ body{
 #gamebox{
   width:360px;
   height:640px;
-  border:4px solid #22c55e;
+  background:#080808;
+  border:6px solid #22ff44;
+  box-shadow:0 0 25px #22ff44;
   position:relative;
-  background:black;
-  overflow:hidden;
 }
 
 canvas{
   width:100%;
   height:100%;
+  image-rendering:pixelated;
   background:#020617;
 }
 
 #start{
   position:absolute;
   inset:0;
-  background:black;
+  background:radial-gradient(circle,#000,#020617);
   display:flex;
   flex-direction:column;
   justify-content:center;
   align-items:center;
-  color:#22c55e;
+  color:#22ff44;
   z-index:10;
 }
 
+#start h1{
+  font-size:16px;
+  text-align:center;
+  animation:pulse 1s infinite alternate;
+}
+
 #start button{
-  margin-top:25px;
-  padding:10px 25px;
-  background:#22c55e;
-  border:none;
+  margin-top:20px;
+  padding:12px 24px;
+  background:#22ff44;
+  border:4px solid #0f0;
   font-family:'Press Start 2P';
+  font-size:10px;
+}
+
+@keyframes pulse{
+  from{opacity:1;}
+  to{opacity:0.5;}
 }
 
 #hud{
   position:absolute;
-  top:8px;
-  left:8px;
-  font-size:10px;
-  color:white;
-  z-index:5;
+  top:6px;
+  left:6px;
+  font-size:9px;
+  color:#fff;
+  background:#000a;
+  border:2px solid #22ff44;
+  padding:4px;
 }
 
 #controls{
   position:absolute;
-  bottom:12px;
+  bottom:8px;
   width:100%;
   display:flex;
   justify-content:space-between;
-  padding:0 12px;
-  z-index:5;
+  padding:0 8px;
 }
 
 #move{
@@ -95,13 +109,15 @@ canvas{
 .btn{
   width:60px;
   height:60px;
-  border-radius:50%;
-  background:rgba(255,255,255,.15);
+  border-radius:10px;
+  background:linear-gradient(#444,#111);
+  border:3px solid #22ff44;
   display:flex;
   align-items:center;
   justify-content:center;
-  font-size:22px;
-  color:white;
+  font-size:20px;
+  color:#22ff44;
+  box-shadow:0 0 10px #22ff44;
 }
 </style>
 </head>
@@ -111,44 +127,39 @@ canvas{
 <div id="gamebox">
 
 <div id="start">
-  <div style="font-size:18px">JÔNATAS & ÉRICA</div>
-  <button id="startBtn">▶ START</button>
+  <h1>JÔNATAS<br>&<br>ÉRICA</h1>
+  <button id="startBtn">START</button>
 </div>
 
 <div id="hud">
-❤️ <span id="life">100</span><br>
-🏆 <span id="level">1</span><br>
-⭐ <span id="score">0</span>
+HP: <span id="life">100</span><br>
+LV: <span id="level">1</span><br>
+PTS: <span id="score">0</span>
 </div>
 
 <canvas id="game" width="1080" height="1920"></canvas>
 
 <div id="controls">
-
   <div id="move">
     <div></div>
-    <div class="btn" id="up">⬆️</div>
+    <div class="btn" id="up">▲</div>
     <div></div>
-
-    <div class="btn" id="left">⬅️</div>
+    <div class="btn" id="left">◀</div>
     <div></div>
-    <div class="btn" id="right">➡️</div>
-
+    <div class="btn" id="right">▶</div>
     <div></div>
-    <div class="btn" id="down">⬇️</div>
+    <div class="btn" id="down">▼</div>
     <div></div>
   </div>
 
   <div id="actions">
-    <div class="btn" id="rotate">🔄</div>
+    <div class="btn" id="rotate">↻</div>
     <div class="btn" id="shoot">⚡</div>
   </div>
-
 </div>
 
 </div>
 
-<!-- Sons -->
 <audio id="bgm" loop src="https://files.freemusicarchive.org/storage-freemusicarchive-org/music/no_curator/Rolemusic/arcade/Rolemusic_-_04_-_Enigmatic_Power.mp3"></audio>
 <audio id="startSound" src="https://assets.mixkit.co/sfx/preview/mixkit-game-start-610.mp3"></audio>
 <audio id="shootSound" src="https://assets.mixkit.co/sfx/preview/mixkit-laser-shoot-1674.mp3"></audio>
@@ -162,7 +173,7 @@ let move={up:false,down:false,left:false,right:false};
 let life=100,level=1,score=0;
 let angle=0;
 
-const player={x:540,y:960,size:42,speed:8};
+const player={x:540,y:960,size:44,speed:7};
 let enemies=[],shots=[],princess={};
 
 function bind(id,dir){
@@ -171,12 +182,9 @@ function bind(id,dir){
   el.addEventListener("touchend",e=>{e.preventDefault();move[dir]=false;});
 }
 
-bind("up","up");
-bind("down","down");
-bind("left","left");
-bind("right","right");
+["up","down","left","right"].forEach(d=>bind(d,d));
 
-document.getElementById("rotate").addEventListener("touchstart",e=>{e.preventDefault();angle+=0.3;});
+document.getElementById("rotate").addEventListener("touchstart",e=>{e.preventDefault();angle+=0.35;});
 document.getElementById("shoot").addEventListener("touchstart",e=>{e.preventDefault();shoot();});
 
 document.getElementById("startBtn").onclick=()=>{
@@ -190,15 +198,12 @@ document.getElementById("startBtn").onclick=()=>{
 };
 
 function shoot(){
-  const sfx=document.getElementById("shootSound");
-  sfx.currentTime=0;
-  sfx.play();
-
+  document.getElementById("shootSound").play();
   shots.push({
     x:player.x+player.size/2,
     y:player.y+player.size/2,
-    dx:Math.cos(angle)*18,
-    dy:Math.sin(angle)*18,
+    dx:Math.cos(angle)*16,
+    dy:Math.sin(angle)*16,
     size:10
   });
 }
@@ -208,10 +213,10 @@ function newLevel(){
   shots=[];
   for(let i=0;i<level*4;i++){
     enemies.push({
-      x:Math.random()*1080,
-      y:Math.random()*1920,
+      x:Math.random()*1000+40,
+      y:Math.random()*1800+40,
       size:36,
-      speed:1.4+level*0.25
+      speed:1.5+level*0.3
     });
   }
   princess={x:Math.random()*900+100,y:Math.random()*1700+100,size:24};
@@ -223,9 +228,6 @@ function update(){
   if(move.down)player.y+=player.speed;
   if(move.left)player.x-=player.speed;
   if(move.right)player.x+=player.speed;
-
-  player.x=Math.max(0,Math.min(1080-player.size,player.x));
-  player.y=Math.max(0,Math.min(1920-player.size,player.y));
 }
 
 function draw(){
@@ -233,24 +235,24 @@ function draw(){
   ctx.fillRect(0,0,1080,1920);
 
   ctx.save();
-  ctx.translate(player.x+player.size/2,player.y+player.size/2);
+  ctx.translate(player.x+22,player.y+22);
   ctx.rotate(angle);
-  ctx.fillStyle="#22c55e";
-  ctx.fillRect(-player.size/2,-player.size/2,player.size,player.size);
+  ctx.fillStyle="#22ff44";
+  ctx.fillRect(-22,-22,44,44);
   ctx.restore();
 
   enemies.forEach(e=>{
-    ctx.fillStyle="#ef4444";
+    ctx.fillStyle="#ff3333";
     ctx.fillRect(e.x,e.y,e.size,e.size);
   });
 
-  ctx.fillStyle="hotpink";
+  ctx.fillStyle="#ff66ff";
   ctx.beginPath();
   ctx.arc(princess.x,princess.y,princess.size,0,Math.PI*2);
   ctx.fill();
 
   shots.forEach(s=>{
-    ctx.fillStyle="#38bdf8";
+    ctx.fillStyle="#00ffff";
     ctx.beginPath();
     ctx.arc(s.x,s.y,s.size,0,Math.PI*2);
     ctx.fill();
@@ -264,7 +266,7 @@ function updateEnemies(){
     const d=Math.hypot(dx,dy);
     e.x+=dx/d*e.speed;
     e.y+=dy/d*e.speed;
-    if(hit(player,e)) life-=0.4;
+    if(d<40) life-=0.3;
   });
   document.getElementById("life").innerText=Math.floor(life);
 }
@@ -274,7 +276,7 @@ function updateShots(){
     s.x+=s.dx;
     s.y+=s.dy;
     enemies.forEach((e,j)=>{
-      if(dist(s,e)<30){
+      if(Math.hypot(s.x-e.x,s.y-e.y)<30){
         enemies.splice(j,1);
         shots.splice(i,1);
         score+=10;
@@ -285,18 +287,10 @@ function updateShots(){
 }
 
 function rescue(){
-  if(dist(player,princess)<50){
+  if(Math.hypot(player.x-princess.x,player.y-princess.y)<60){
     level++;
     newLevel();
   }
-}
-
-function hit(a,b){
-  return a.x<b.x+b.size&&a.x+a.size>b.x&&a.y<b.y+b.size&&a.y+a.size>b.y;
-}
-
-function dist(a,b){
-  return Math.hypot(a.x-b.x,a.y-b.y);
 }
 
 function loop(){
