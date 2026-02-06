@@ -2,52 +2,58 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
 <title>Jônatas & Érica</title>
 
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
 
-* { touch-action: none; }
-
-body{
+*{
   margin:0;
-  background:black;
-  overflow:hidden;
-  font-family:'Press Start 2P', cursive;
+  padding:0;
+  box-sizing:border-box;
+  touch-action:none;
+  -webkit-user-select:none;
+  user-select:none;
 }
 
-canvas{display:none}
+body{
+  background:black;
+  overflow:hidden;
+  font-family:'Press Start 2P';
+}
+
+canvas{
+  display:none;
+  background:#020617;
+}
 
 #start{
   position:fixed;
   inset:0;
-  background:black;
-  color:#22c55e;
   display:flex;
   flex-direction:column;
-  align-items:center;
   justify-content:center;
-  text-align:center;
+  align-items:center;
+  color:#22c55e;
+  background:black;
 }
 
 #title{
-  font-size:26px;
-  animation: blink 1s infinite alternate;
+  font-size:28px;
+  margin-bottom:15px;
+  animation:pulse 1s infinite alternate;
 }
 
-@keyframes blink{
-  from{opacity:.5}
+@keyframes pulse{
+  from{opacity:.6}
   to{opacity:1}
 }
 
 #btn{
-  margin-top:30px;
   padding:15px 30px;
   background:#22c55e;
-  color:black;
   border:none;
-  font-size:14px;
   font-family:'Press Start 2P';
 }
 
@@ -56,13 +62,13 @@ canvas{display:none}
   top:10px;
   left:10px;
   color:white;
-  z-index:5;
   font-size:12px;
+  z-index:5;
 }
 
 #controls{
   position:fixed;
-  bottom:10px;
+  bottom:15px;
   left:50%;
   transform:translateX(-50%);
   display:flex;
@@ -74,12 +80,12 @@ canvas{display:none}
   width:55px;
   height:55px;
   border-radius:50%;
-  background:rgba(255,255,255,.2);
+  background:rgba(255,255,255,.15);
   display:flex;
-  align-items:center;
   justify-content:center;
-  font-size:20px;
+  align-items:center;
   color:white;
+  font-size:20px;
 }
 </style>
 </head>
@@ -87,8 +93,7 @@ canvas{display:none}
 <body>
 
 <div id="start">
-  <div id="title">JÔNATAS</div>
-  <div style="font-size:14px;margin-top:10px;">& ÉRICA</div>
+  <div id="title">JÔNATAS & ÉRICA</div>
   <button id="btn" onclick="startGame()">▶ START</button>
 </div>
 
@@ -101,92 +106,137 @@ canvas{display:none}
 <canvas id="game"></canvas>
 
 <div id="controls">
-  <div class="btn" ontouchstart="keys.a=true" ontouchend="keys.a=false">⬅️</div>
-  <div class="btn" ontouchstart="keys.w=true" ontouchend="keys.w=false">⬆️</div>
-  <div class="btn" ontouchstart="keys.s=true" ontouchend="keys.s=false">⬇️</div>
-  <div class="btn" ontouchstart="keys.d=true" ontouchend="keys.d=false">➡️</div>
+  <div class="btn" ontouchstart="move.left=true" ontouchend="move.left=false">⬅️</div>
+  <div class="btn" ontouchstart="move.up=true" ontouchend="move.up=false">⬆️</div>
+  <div class="btn" ontouchstart="move.down=true" ontouchend="move.down=false">⬇️</div>
+  <div class="btn" ontouchstart="move.right=true" ontouchend="move.right=false">➡️</div>
   <div class="btn" ontouchstart="shoot()">⚡</div>
 </div>
 
-<!-- Sons -->
-<audio id="introMusic" loop>
-  <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3">
-</audio>
-
-<audio id="shootSound">
-  <source src="https://www.soundjay.com/button/sounds/button-16.mp3">
-</audio>
-
-<audio id="gameOverSound">
-  <source src="https://www.soundjay.com/misc/sounds/fail-buzzer-01.mp3">
-</audio>
+<audio id="intro" loop src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3"></audio>
+<audio id="shot" src="https://www.soundjay.com/button/sounds/button-16.mp3"></audio>
+<audio id="over" src="https://www.soundjay.com/misc/sounds/fail-buzzer-01.mp3"></audio>
 
 <script>
 const canvas=document.getElementById('game');
 const ctx=canvas.getContext('2d');
-function resize(){canvas.width=innerWidth;canvas.height=innerHeight}
-resize(); onresize=resize;
 
-let keys={},life=100,level=1,score=0;
-const player={x:150,y:150,size:26,speed:4};
-let enemies=[],princess={},shots=[];
+function resize(){
+  canvas.width=innerWidth;
+  canvas.height=innerHeight;
+}
+resize();
+onresize=resize;
+
+let move={up:false,down:false,left:false,right:false};
+let life=100,level=1,score=0;
+
+const player={x:200,y:200,size:26,speed:3};
+let enemies=[],shots=[],princess={};
 
 function startGame(){
   document.getElementById("start").style.display="none";
   canvas.style.display="block";
-  document.getElementById("introMusic").play();
+  document.getElementById("intro").play();
   newLevel();
   loop();
 }
 
 function newLevel(){
   enemies=[];
-  for(let i=0;i<level*5;i++){
+  for(let i=0;i<level*4;i++){
     enemies.push({
       x:Math.random()*canvas.width,
       y:Math.random()*canvas.height,
       size:24,
+      speed:1+level*0.3,
       life:30,
-      speed:1+level*0.2,
       points:10
     });
   }
-  princess={x:Math.random()*canvas.width,y:Math.random()*canvas.height,size:14};
+  princess={
+    x:Math.random()*canvas.width,
+    y:Math.random()*canvas.height,
+    size:14
+  };
   document.getElementById("level").innerText=level;
 }
 
-document.onkeydown=e=>keys[e.key.toLowerCase()]=true;
-document.onkeyup=e=>keys[e.key.toLowerCase()]=false;
-
-function move(){
-  if(keys.w)player.y-=player.speed;
-  if(keys.s)player.y+=player.speed;
-  if(keys.a)player.x-=player.speed;
-  if(keys.d)player.x+=player.speed;
-}
-
 function shoot(){
-  document.getElementById("shootSound").play();
+  document.getElementById("shot").play();
   shots.push({
     x:player.x+player.size/2,
     y:player.y+player.size/2,
-    dx:8,
+    dx:6,
     dy:0,
-    size:5
+    size:4
+  });
+}
+
+document.onkeydown=e=>{
+  if(e.key==="ArrowUp"||e.key==="w")move.up=true;
+  if(e.key==="ArrowDown"||e.key==="s")move.down=true;
+  if(e.key==="ArrowLeft"||e.key==="a")move.left=true;
+  if(e.key==="ArrowRight"||e.key==="d")move.right=true;
+  if(e.code==="Space")shoot();
+};
+
+document.onkeyup=e=>{
+  if(e.key==="ArrowUp"||e.key==="w")move.up=false;
+  if(e.key==="ArrowDown"||e.key==="s")move.down=false;
+  if(e.key==="ArrowLeft"||e.key==="a")move.left=false;
+  if(e.key==="ArrowRight"||e.key==="d")move.right=false;
+};
+
+function update(){
+  if(move.up)player.y-=player.speed;
+  if(move.down)player.y+=player.speed;
+  if(move.left)player.x-=player.speed;
+  if(move.right)player.x+=player.speed;
+}
+
+function draw(){
+  ctx.fillStyle="#020617";
+  ctx.fillRect(0,0,canvas.width,canvas.height);
+
+  ctx.fillStyle="#22c55e";
+  ctx.fillRect(player.x,player.y,player.size,player.size);
+
+  enemies.forEach(e=>{
+    ctx.fillStyle="#ef4444";
+    ctx.fillRect(e.x,e.y,e.size,e.size);
+  });
+
+  ctx.fillStyle="hotpink";
+  ctx.beginPath();
+  ctx.arc(princess.x,princess.y,princess.size,0,Math.PI*2);
+  ctx.fill();
+
+  shots.forEach(s=>{
+    ctx.fillStyle="#38bdf8";
+    ctx.beginPath();
+    ctx.arc(s.x,s.y,s.size,0,Math.PI*2);
+    ctx.fill();
+  });
+}
+
+function updateEnemies(){
+  enemies.forEach(e=>{
+    e.x+=(player.x-e.x)*0.01;
+    e.y+=(player.y-e.y)*0.01;
+    if(hit(player,e)){
+      life-=0.4;
+      document.getElementById("life").innerText=Math.floor(life);
+    }
   });
 }
 
 function updateShots(){
   shots.forEach((s,i)=>{
     s.x+=s.dx;
-    ctx.fillStyle="#38bdf8";
-    ctx.beginPath();
-    ctx.arc(s.x,s.y,s.size,0,Math.PI*2);
-    ctx.fill();
-
-    enemies.forEach((e,ei)=>{
-      if(dist(s,e)<20){
-        enemies.splice(ei,1);
+    enemies.forEach((e,j)=>{
+      if(dist(s,e)<18){
+        enemies.splice(j,1);
         shots.splice(i,1);
         score+=e.points;
         document.getElementById("score").innerText=score;
@@ -195,50 +245,15 @@ function updateShots(){
   });
 }
 
-function drawMap(){
-  ctx.fillStyle="#020617";
-  ctx.fillRect(0,0,canvas.width,canvas.height);
-}
-
-function drawPlayer(){
-  ctx.fillStyle="#22c55e";
-  ctx.fillRect(player.x,player.y,player.size,player.size);
-}
-
-function drawEnemies(){
-  enemies.forEach(e=>{
-    ctx.fillStyle="#ef4444";
-    ctx.fillRect(e.x,e.y,e.size,e.size);
-  });
-}
-
-function drawPrincess(){
-  ctx.fillStyle="hotpink";
-  ctx.beginPath();
-  ctx.arc(princess.x,princess.y,princess.size,0,Math.PI*2);
-  ctx.fill();
-}
-
-function enemyAI(){
-  enemies.forEach(e=>{
-    e.x+=(player.x-e.x)*0.01;
-    e.y+=(player.y-e.y)*0.01;
-    if(collide(player,e)){
-      life-=0.4;
-      document.getElementById("life").innerText=Math.floor(life);
-    }
-  });
-}
-
 function rescue(){
   if(dist(player,princess)<35){
-    alert(\"💖 Você salvou Érica!\");
+    alert("💖 Você salvou Érica!");
     level++;
     newLevel();
   }
 }
 
-function collide(a,b){
+function hit(a,b){
   return a.x<b.x+b.size && a.x+a.size>b.x && a.y<b.y+b.size && a.y+a.size>b.y;
 }
 
@@ -247,18 +262,15 @@ function dist(a,b){
 }
 
 function loop(){
-  drawMap();
-  move();
-  drawPlayer();
-  drawEnemies();
-  drawPrincess();
-  enemyAI();
+  update();
+  draw();
+  updateEnemies();
   updateShots();
   rescue();
 
   if(life<=0){
-    document.getElementById(\"gameOverSound\").play();
-    alert(\"GAME OVER\"); 
+    document.getElementById("over").play();
+    alert("GAME OVER");
     location.reload();
   }
 
