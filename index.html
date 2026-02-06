@@ -2,11 +2,13 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Jônatas & Érica</title>
 
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+* { touch-action: none; }
 
 body{
   margin:0;
@@ -30,12 +32,12 @@ canvas{display:none}
 }
 
 #title{
-  font-size:32px;
+  font-size:26px;
   animation: blink 1s infinite alternate;
 }
 
 @keyframes blink{
-  from{opacity:0.5}
+  from{opacity:.5}
   to{opacity:1}
 }
 
@@ -46,6 +48,7 @@ canvas{display:none}
   color:black;
   border:none;
   font-size:14px;
+  font-family:'Press Start 2P';
 }
 
 #hud{
@@ -54,6 +57,7 @@ canvas{display:none}
   left:10px;
   color:white;
   z-index:5;
+  font-size:12px;
 }
 
 #controls{
@@ -85,12 +89,13 @@ canvas{display:none}
 <div id="start">
   <div id="title">JÔNATAS</div>
   <div style="font-size:14px;margin-top:10px;">& ÉRICA</div>
-  <button id="btn" onclick="startGame()">▶ INICIAR</button>
+  <button id="btn" onclick="startGame()">▶ START</button>
 </div>
 
 <div id="hud">
 ❤️ Vida: <span id="life">100</span><br>
-🏆 Fase: <span id="level">1</span>
+🏆 Fase: <span id="level">1</span><br>
+⭐ Score: <span id="score">0</span>
 </div>
 
 <canvas id="game"></canvas>
@@ -100,11 +105,20 @@ canvas{display:none}
   <div class="btn" ontouchstart="keys.w=true" ontouchend="keys.w=false">⬆️</div>
   <div class="btn" ontouchstart="keys.s=true" ontouchend="keys.s=false">⬇️</div>
   <div class="btn" ontouchstart="keys.d=true" ontouchend="keys.d=false">➡️</div>
-  <div class="btn" ontouchstart="attack()">⚔️</div>
+  <div class="btn" ontouchstart="shoot()">⚡</div>
 </div>
 
-<audio id="music" loop>
-  <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3">
+<!-- Sons -->
+<audio id="introMusic" loop>
+  <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3">
+</audio>
+
+<audio id="shootSound">
+  <source src="https://www.soundjay.com/button/sounds/button-16.mp3">
+</audio>
+
+<audio id="gameOverSound">
+  <source src="https://www.soundjay.com/misc/sounds/fail-buzzer-01.mp3">
 </audio>
 
 <script>
@@ -113,22 +127,29 @@ const ctx=canvas.getContext('2d');
 function resize(){canvas.width=innerWidth;canvas.height=innerHeight}
 resize(); onresize=resize;
 
-let keys={},life=100,level=1;
-const player={x:100,y:100,size:26,speed:4};
-let enemies=[],princess={};
+let keys={},life=100,level=1,score=0;
+const player={x:150,y:150,size:26,speed:4};
+let enemies=[],princess={},shots=[];
 
 function startGame(){
   document.getElementById("start").style.display="none";
   canvas.style.display="block";
-  document.getElementById("music").play();
+  document.getElementById("introMusic").play();
   newLevel();
   loop();
 }
 
 function newLevel(){
   enemies=[];
-  for(let i=0;i<level*4;i++){
-    enemies.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,size:24,life:30,speed:1+level*0.2});
+  for(let i=0;i<level*5;i++){
+    enemies.push({
+      x:Math.random()*canvas.width,
+      y:Math.random()*canvas.height,
+      size:24,
+      life:30,
+      speed:1+level*0.2,
+      points:10
+    });
   }
   princess={x:Math.random()*canvas.width,y:Math.random()*canvas.height,size:14};
   document.getElementById("level").innerText=level;
@@ -142,6 +163,36 @@ function move(){
   if(keys.s)player.y+=player.speed;
   if(keys.a)player.x-=player.speed;
   if(keys.d)player.x+=player.speed;
+}
+
+function shoot(){
+  document.getElementById("shootSound").play();
+  shots.push({
+    x:player.x+player.size/2,
+    y:player.y+player.size/2,
+    dx:8,
+    dy:0,
+    size:5
+  });
+}
+
+function updateShots(){
+  shots.forEach((s,i)=>{
+    s.x+=s.dx;
+    ctx.fillStyle="#38bdf8";
+    ctx.beginPath();
+    ctx.arc(s.x,s.y,s.size,0,Math.PI*2);
+    ctx.fill();
+
+    enemies.forEach((e,ei)=>{
+      if(dist(s,e)<20){
+        enemies.splice(ei,1);
+        shots.splice(i,1);
+        score+=e.points;
+        document.getElementById("score").innerText=score;
+      }
+    });
+  });
 }
 
 function drawMap(){
@@ -173,24 +224,15 @@ function enemyAI(){
     e.x+=(player.x-e.x)*0.01;
     e.y+=(player.y-e.y)*0.01;
     if(collide(player,e)){
-      life-=0.3;
+      life-=0.4;
       document.getElementById("life").innerText=Math.floor(life);
-    }
-  });
-}
-
-function attack(){
-  enemies.forEach((e,i)=>{
-    if(dist(player,e)<40){
-      e.life-=15;
-      if(e.life<=0)enemies.splice(i,1);
     }
   });
 }
 
 function rescue(){
   if(dist(player,princess)<35){
-    alert("💖 Você salvou Érica!");
+    alert(\"💖 Você salvou Érica!\");
     level++;
     newLevel();
   }
@@ -211,10 +253,12 @@ function loop(){
   drawEnemies();
   drawPrincess();
   enemyAI();
+  updateShots();
   rescue();
 
   if(life<=0){
-    alert("GAME OVER");
+    document.getElementById(\"gameOverSound\").play();
+    alert(\"GAME OVER\"); 
     location.reload();
   }
 
