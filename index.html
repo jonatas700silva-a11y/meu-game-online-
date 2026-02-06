@@ -8,7 +8,13 @@
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
 
-*{margin:0;padding:0;box-sizing:border-box;touch-action:none;user-select:none;}
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  touch-action:none;
+  user-select:none;
+}
 
 body{
   background:black;
@@ -25,6 +31,7 @@ body{
   border:4px solid #22c55e;
   position:relative;
   background:black;
+  overflow:hidden;
 }
 
 canvas{
@@ -74,20 +81,20 @@ canvas{
 
 #move{
   display:grid;
-  grid-template-columns:55px 55px 55px;
-  grid-template-rows:55px 55px 55px;
+  grid-template-columns:60px 60px 60px;
+  grid-template-rows:60px 60px 60px;
   gap:6px;
 }
 
 #actions{
   display:flex;
   flex-direction:column;
-  gap:12px;
+  gap:14px;
 }
 
 .btn{
-  width:55px;
-  height:55px;
+  width:60px;
+  height:60px;
   border-radius:50%;
   background:rgba(255,255,255,.15);
   display:flex;
@@ -105,7 +112,7 @@ canvas{
 
 <div id="start">
   <div style="font-size:18px">JÔNATAS & ÉRICA</div>
-  <button onclick="startGame()">▶ START</button>
+  <button id="startBtn">▶ START</button>
 </div>
 
 <div id="hud">
@@ -120,21 +127,21 @@ canvas{
 
   <div id="move">
     <div></div>
-    <div class="btn" ontouchstart="move.up=true" ontouchend="move.up=false">⬆️</div>
+    <div class="btn" id="up">⬆️</div>
     <div></div>
 
-    <div class="btn" ontouchstart="move.left=true" ontouchend="move.left=false">⬅️</div>
+    <div class="btn" id="left">⬅️</div>
     <div></div>
-    <div class="btn" ontouchstart="move.right=true" ontouchend="move.right=false">➡️</div>
+    <div class="btn" id="right">➡️</div>
 
     <div></div>
-    <div class="btn" ontouchstart="move.down=true" ontouchend="move.down=false">⬇️</div>
+    <div class="btn" id="down">⬇️</div>
     <div></div>
   </div>
 
   <div id="actions">
-    <div class="btn" onclick="rotate()">🔄</div>
-    <div class="btn" onclick="shoot()">⚡</div>
+    <div class="btn" id="rotate">🔄</div>
+    <div class="btn" id="shoot">⚡</div>
   </div>
 
 </div>
@@ -142,21 +149,10 @@ canvas{
 </div>
 
 <!-- Sons -->
-<audio id="bgm" loop>
-  <source src="https://assets.mixkit.co/music/preview/mixkit-arcade-retro-game-over-213.mp3">
-</audio>
-
-<audio id="startSound">
-  <source src="https://assets.mixkit.co/sfx/preview/mixkit-game-start-610.mp3">
-</audio>
-
-<audio id="shootSound">
-  <source src="https://assets.mixkit.co/sfx/preview/mixkit-laser-shoot-1674.mp3">
-</audio>
-
-<audio id="loseVoice">
-  <source src="https://translate.google.com/translate_tts?ie=UTF-8&tl=pt-BR&client=tw-ob&q=Tente+novamente">
-</audio>
+<audio id="bgm" loop src="https://files.freemusicarchive.org/storage-freemusicarchive-org/music/no_curator/Rolemusic/arcade/Rolemusic_-_04_-_Enigmatic_Power.mp3"></audio>
+<audio id="startSound" src="https://assets.mixkit.co/sfx/preview/mixkit-game-start-610.mp3"></audio>
+<audio id="shootSound" src="https://assets.mixkit.co/sfx/preview/mixkit-laser-shoot-1674.mp3"></audio>
+<audio id="loseVoice" src="https://translate.google.com/translate_tts?ie=UTF-8&tl=pt-BR&client=tw-ob&q=Tente+novamente"></audio>
 
 <script>
 const canvas=document.getElementById("game");
@@ -169,17 +165,29 @@ let angle=0;
 const player={x:540,y:960,size:42,speed:8};
 let enemies=[],shots=[],princess={};
 
-function startGame(){
+function bind(id,dir){
+  const el=document.getElementById(id);
+  el.addEventListener("touchstart",e=>{e.preventDefault();move[dir]=true;});
+  el.addEventListener("touchend",e=>{e.preventDefault();move[dir]=false;});
+}
+
+bind("up","up");
+bind("down","down");
+bind("left","left");
+bind("right","right");
+
+document.getElementById("rotate").addEventListener("touchstart",e=>{e.preventDefault();angle+=0.3;});
+document.getElementById("shoot").addEventListener("touchstart",e=>{e.preventDefault();shoot();});
+
+document.getElementById("startBtn").onclick=()=>{
   document.getElementById("start").style.display="none";
   document.getElementById("startSound").play();
   const bgm=document.getElementById("bgm");
-  bgm.volume=0.3;
+  bgm.volume=0.35;
   bgm.play();
   newLevel();
   loop();
-}
-
-function rotate(){ angle+=0.35; }
+};
 
 function shoot(){
   const sfx=document.getElementById("shootSound");
@@ -203,8 +211,7 @@ function newLevel(){
       x:Math.random()*1080,
       y:Math.random()*1920,
       size:36,
-      speed:1.5+level*0.3,
-      life:40
+      speed:1.4+level*0.25
     });
   }
   princess={x:Math.random()*900+100,y:Math.random()*1700+100,size:24};
@@ -254,15 +261,12 @@ function updateEnemies(){
   enemies.forEach(e=>{
     const dx=player.x-e.x;
     const dy=player.y-e.y;
-    const dist=Math.hypot(dx,dy);
-    e.x+=dx/dist*e.speed;
-    e.y+=dy/dist*e.speed;
-
-    if(hit(player,e)){
-      life-=0.4;
-      document.getElementById("life").innerText=Math.floor(life);
-    }
+    const d=Math.hypot(dx,dy);
+    e.x+=dx/d*e.speed;
+    e.y+=dy/d*e.speed;
+    if(hit(player,e)) life-=0.4;
   });
+  document.getElementById("life").innerText=Math.floor(life);
 }
 
 function updateShots(){
@@ -307,7 +311,6 @@ function loop(){
     document.getElementById("loseVoice").play();
     setTimeout(()=>location.reload(),2500);
   }
-
   requestAnimationFrame(loop);
 }
 </script>
